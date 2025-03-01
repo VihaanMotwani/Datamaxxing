@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instagram Reels with TruthLens</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    
+    body {
+      background-color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    /* Phone frame styling */
+    .phone-frame {
+      width: 375px;
+      height: 812px; /* iPhone X dimensions */
+      background-color: #000;
+      border-radius: 40px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      position: relative;
+      overflow: hidden;
+      border: 10px solid #1a1a1a;
+    }
+    
+    /* Notch styling */
+    .phone-frame::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 150px;
+      height: 30px;
+      background-color: #1a1a1a;
+      border-bottom-left-radius: 15px;
+      border-bottom-right-radius: 15px;
+      z-index: 100;
+    }
+    
+    /* App content */
+    .app-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background-color: #000;
+      overflow: hidden;
+    }
+    
+    .reels-container {
+      height: 100%;
+      width: 100%;
+      position: relative;
+    }
+    
+    .reels-title {
+      position: absolute;
+      top: 40px;
+      left: 20px;
+      font-size: 18px;
+      font-weight: 600;
+      z-index: 10;
+      color: white;
+    }
+    
+    /* Scrollable reels */
+    .reels-scroll-container {
+      height: 100%;
+      width: 100%;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+      -ms-overflow-style: none;  /* Hide scrollbar IE and Edge */
+      scrollbar-width: none;  /* Hide scrollbar Firefox */
+    }
+    
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .reels-scroll-container::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .reel-item {
+      height: 100%;
+      width: 100%;
+      position: relative;
+      scroll-snap-align: start;
+      background-color: #111;
+    }
+    
+    .video-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    
+    .reel-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .video-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .play-icon {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 60px;
+      background-color: rgba(0, 0, 0, 0.5);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .side-buttons {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      z-index: 10;
+    }
+    
+    .side-button {
+      background: none;
+      border: none;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+    
+    .side-button-icon {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .side-button-count {
+      font-size: 12px;
+    }
+    
+    .bottom-content {
+      position: absolute;
+      bottom: 80px;
+      left: 0;
+      width: 100%;
+      padding: 15px;
+      z-index: 10;
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: #8a3ab9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-right: 10px;
+      color: white;
+    }
+    
+    .username {
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      color: white;
+    }
+    
+    .verified-badge {
+      width: 16px;
+      height: 16px;
+      margin-left: 5px;
+      color: #3897f0;
+    }
+    
+    .caption {
+      margin-bottom: 16px;
+      padding-right: 45px;
+      line-height: 1.4;
+      font-size: 14px;
+      color: white;
+    }
+    
+    .context-button {
+      width: 100%;
+      background-color: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
+      padding: 10px;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    
+    .context-button svg {
+      margin-right: 8px;
+    }
+    
+    .bottom-nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background-color: #000;
+      border-top: 1px solid #222;
+      z-index: 20;
+    }
+    
+    .nav-button {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+    }
+    
+    /* Loading state */
+    .loading-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 15px;
+    }
+    
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    
+    .loading-text {
+      color: white;
+      font-size: 14px;
+    }
+    
+    /* Modal styles */
+    .modal {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 0;
+    }
+    
+    .modal.show {
+      display: flex;
+    }
+    
+    .modal-content {
+      background-color: white;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      color: #333;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      border-bottom: 1px solid #eee;
+      background-color: white;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    
+    .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .close-button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+      color: #666;
+    }
+    
+    .modal-body {
+      padding: 16px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    
+    .modal-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+    
+    .analysis-box {
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .analysis-box.misinformation {
+      background-color: #FEECED;
+      border: 1px solid #F5C2C7;
+    }
+    
+    .analysis-box.valid {
+      background-color: #D1E7DD;
+      border: 1px solid #BADBCC;
+    }
+    
+    .analysis-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .analysis-title {
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+    
+    .analysis-title.misinformation {
+      color: #842029;
+    }
+    
+    .analysis-title.valid {
+      color: #0F5132;
+    }
+    
+    .confidence-score {
+      font-size: 12px;
+    }
+    
+    .analysis-explanation {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.4;
+    }
+    
+    .criteria-list {
+      margin-top: 12px;
+    }
+    
+    .criteria-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 6px;
+    }
+    
+    .criterion {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 4px;
+      font-size: 11px;
+      color: #666;
+    }
+    
+    .criterion-number {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background-color: #FEECED;
+      color: #842029;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+    
+    .context-section {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    
+    .context-summary {
+      background-color: #f8f9fa;
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .context-summary h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 6px;
+    }
+    
+    .context-summary p {
+      font-size: 12px;
+      color: #555;
+    }
+    
+    .perspective-section {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .perspective-section h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    .perspective {
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .perspective:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+    
+    .perspective h5 {
+      font-size: 12px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 6px;
+    }
+    
+    .perspective p {
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 6px;
+    }
+    
+    .perspective p strong {
+      font-weight: 600;
+    }
+    
+    .perspective .sources {
+      font-size: 11px;
+      color: #777;
+    }
+    
+    .consensus-section, .conclusion-section {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .consensus-section h4, .conclusion-section h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 6px;
+    }
+    
+    .consensus-section p, .conclusion-section p {
+      font-size: 12px;
+      color: #555;
+    }
+    
+    .sources-section {
+      padding: 12px;
+    }
+    
+    .sources-section h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    .source-item {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .source-number {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+    
+    .source-number.high {
+      background-color: #D1E7DD;
+      color: #0F5132;
+    }
+    
+    .source-number.medium {
+      background-color: #FFF3CD;
+      color: #856404;
+    }
+    
+    .source-number.low {
+      background-color: #FEECED;
+      color: #842029;
+    }
+    
+    .source-details {
+      flex: 1;
+    }
+    
+    .source-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #333;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    
+    .reliability-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    
+    .reliability-badge.high {
+      background-color: #D1E7DD;
+      color: #0F5132;
+    }
+    
+    .reliability-badge.medium {
+      background-color: #FFF3CD;
+      color: #856404;
+    }
+    
+    .reliability-badge.low {
+      background-color: #FEECED;
+      color: #842029;
+    }
+    
+    .source-link {
+      font-size: 11px;
+      color: #0d6efd;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 2px;
+    }
+    
+    .liked {
+      color: #ED4956;
+      fill: #ED4956;
+    }
+    
+    .saved {
+      fill: white;
+    }
+
+    /* Upload form styles */
+    .upload-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+    
+    .upload-modal.show {
+      display: flex;
+    }
+    
+    .upload-modal-content {
+      background-color: white;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 350px;
+      padding: 20px;
+    }
+    
+    .upload-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .upload-modal-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .upload-form-group {
+      margin-bottom: 15px;
+    }
+    
+    .upload-form-label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    
+    .upload-form-input, .upload-form-textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .upload-form-textarea {
+      height: 80px;
+      resize: none;
+    }
+    
+    .upload-form-button {
+      background-color: #0095f6;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+    }
+    
+    .upload-form-button:disabled {
+      background-color: #b2dffc;
+      cursor: not-allowed;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-height: 800px) {
+      .phone-frame {
+        height: 740px;
+      }
+    }
+    
+    @media (max-height: 700px) {
+      .phone-frame {
+        height: 667px; /* iPhone 8 height */
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <div class="app-container">
+      <div class="reels-container">
+        <div class="reels-title">Reels</div>
+        
+        <div class="reels-scroll-container" id="reelsContainer">
+          <!-- Reels will be loaded here dynamically -->
+          <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Loading Reels...</div>
+          </div>
+        </div>
+        
+        <div class="bottom-nav">
+          <button class="nav-button">
+            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M9.005 16.545a2.997 2.997 0 012.997-2.997h0A2.997 2.997 0 0115 16.545V22h7V11.543L12 2 2 11.543V22h7.005z" stroke="white" strokeLinejoin="round" strokeWidth="2"></path>
+            </svg>
+          </button>
+          
+          <button class="nav-button">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </button>
+          
+          <button class="nav-button" id="uploadButton">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+          </button>
+          
+          <button class="nav-button">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+            </svg>
+          </button>
+          
+          <button class="nav-button">
+            <div style="width: 24px; height: 24px; border-radius: 50%; background-color: #333;"></div>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Context Modal -->
+      <div class="modal" id="contextModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <div class="modal-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"></circle>
+                <path d="M12 16v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                <path d="M12 8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+              </svg>
+              TruthLens Analysis
+            </div>
+            <button class="close-button" id="closeModal">✕</button>
+          </div>
+          
+          <div class="modal-body" id="modalContent">
+            <!-- Content will be loaded by JavaScript -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- Upload Modal -->
+      <div class="upload-modal" id="uploadModal">
+        <div class="upload-modal-content">
+          <div class="upload-modal-header">
+            <div class="upload-modal-title">Upload New Reel</div>
+            <button class="close-button" id="closeUploadModal">✕</button>
+          </div>
+          
+          <form id="uploadForm">
+            <div class="upload-form-group">
+              <label class="upload-form-label" for="username">Username</label>
+              <input type="text" id="username" class="upload-form-input" required>
+            </div>
+            
+            <div class="upload-form-group">
+              <label class="upload-form-label" for="caption">Caption</label>
+              <textarea id="caption" class="upload-form-textarea" required></textarea>
+            </div>
+            
+            <div class="upload-form-group">
+              <label class="upload-form-label" for="videoFile">Video</label>
+              <input type="file" id="videoFile" accept="video/*" required>
+            </div>
+            
+            <div class="upload-form-group">
+              <label class="upload-form-label">
+                <input type="checkbox" id="verified"> Verified Account
+              </label>
+            </div>
+            
+            <button type="submit" class="upload-form-button" id="submitUpload">Upload Reel</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Reel template for JavaScript to use -->
+  <template id="reelTemplate">
+    <div class="reel-item">
+      <div class="video-container">
+        <video class="reel-video" loop muted playsInline></video>
+        <div class="play-icon">
+          <svg width="40" height="40" fill="white" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z"></path>
+          </svg>
+        </div>
+      </div>
+      
+      <div class="side-buttons">
+        <button class="side-button like-button">
+          <div class="side-button-icon">
+            <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+          </div>
+          <span class="side-button-count likes-count">0</span>
+        </button>
+        
+        <button class="side-button">
+          <div class="side-button-icon">
+            <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            </svg>
+          </div>
+          <span class="side-button-count comments-count">0</span>
+        </button>
+        
+        <button class="side-button">
+          <div class="side-button-icon">
+            <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M22 2L11 13"></path>
+              <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M22 2l-7 20-4-9-9-4 20-7z"></path>
+            </svg>
+          </div>
+        </button>
+        
+        <button class="side-button save-button">
+          <div class="side-button-icon">
+            <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </div>
+        </button>
+      </div>
+      
+      <div class="bottom-content">
+        <div class="user-info">
+          <div class="user-avatar"></div>
+          <div class="username">
+            username
+            <svg class="verified-badge" viewBox="0 0 24 24" fill="none" style="display: none;">
+              <path d="M19.8 5.8l-3.9-2.6-1.9-4.2L9.9 3.2 5.9 0.6 4 4.8 0 7.3l1.9 4.2L0 15.7l4 2.5 1.9 4.2 4.1-2.6 4.1 2.6 1.9-4.2 4-2.5-1.9-4.2 1.9-4.2C19.9 6 19.9 5.9 19.8 5.8z" fill="currentColor"></path>
+              <path d="M9.2 12.5l-2.4-2.4-1.1 1.1 3.5 3.5 7-7-1.1-1.1L9.2 12.5z" fill="white"></path>
+            </svg>
+          </div>
+        </div>
+        
+        <div class="caption"></div>
+        
+        <button class="context-button" style="display: none;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"></circle>
+            <path d="M12 16v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+            <path d="M12 8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+          Get More Context
+        </button>
+      </div>
+    </div>
+  </template>
+  
+  <script>
+    // Sample reels data (no API calls)
+    const reelsData = [
+      {
+        id: 1,
+        username: 'healthguru',
+        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+        caption: "Scientists have found that drinking lemon water every morning can detoxify your body and cure diabetes. Big pharma doesn't want you to know this secret! MIRACLE CURE REVEALED! 100% GUARANTEED",
+        likes: 1245,
+        comments: 89,
+        verified: true
+      },
+      {
+        id: 2,
+        username: 'techreview',
+        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+        caption: "Instagram has just admitted that they lower the quality of old Reels and stories and highlights if something isn't watched for a long time. This puts smaller creators at a disadvantage since their content gets fewer views over time.",
+        likes: 4532,
+        comments: 213,
+        verified: true
+      },
+      {
+        id: 3,
+        username: 'newsflash',
+        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+        caption: "BREAKING: Scientists discover that excessive social media use causes permanent brain damage. A new study shows Instagram is the worst platform for your mental health.",
+        likes: 8976,
+        comments: 421,
+        verified: false
+      },
+      {
+        id: 4,
+        username: 'travelbug',
+        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+        caption: "Just arrived in Paris! The Eiffel Tower looks even more magical in person. Can't wait to explore more of this beautiful city! #travel #paris #wanderlust",
+        likes: 6354,
+        comments: 187,
+        verified: false
+      }
+    ];
+    
+    // DOM Elements
+    const reelsContainer = document.getElementById('reelsContainer');
+    const reelTemplate = document.getElementById('reelTemplate');
+    const contextModal = document.getElementById('contextModal');
+    const closeModalBtn = document.getElementById('closeModal');
+    const modalContent = document.getElementById('modalContent');
+    const uploadButton = document.getElementById('uploadButton');
+    const uploadModal = document.getElementById('uploadModal');
+    const closeUploadModalBtn = document.getElementById('closeUploadModal');
+    const uploadForm = document.getElementById('uploadForm');
+    
+    // Track current reel
+    let currentReelId = null;
+    
+    // Load and render reels
+    function loadReels() {
+      // Remove loading indicator
+      reelsContainer.innerHTML = '';
+      
+      // Create and append each reel
+      reelsData.forEach(reel => {
+        const reelElement = createReelElement(reel);
+        reelsContainer.appendChild(reelElement);
+      });
+      
+      // Setup intersection observer for video play/pause
+      setupVideoObserver();
+    }
+    
+    // Create a reel element from template
+    function createReelElement(reel) {
+      const reelElement = reelTemplate.content.cloneNode(true).querySelector('.reel-item');
+      reelElement.dataset.reelId = reel.id;
+      
+      // Set video source
+      const video = reelElement.querySelector('.reel-video');
+      video.src = reel.videoUrl;
+      video.poster = 'https://via.placeholder.com/375x812/111111/333333?text=Tap+to+play';
+      
+      // Set play/pause functionality
+      const videoContainer = reelElement.querySelector('.video-container');
+      const playIcon = reelElement.querySelector('.play-icon');
+      
+      videoContainer.addEventListener('click', () => {
+        if (video.paused) {
+          video.play();
+          playIcon.style.display = 'none';
+        } else {
+          video.pause();
+          playIcon.style.display = 'flex';
+        }
+      });
+      
+      // Set username and verified badge
+      reelElement.querySelector('.user-avatar').textContent = reel.username.charAt(0).toUpperCase();
+      reelElement.querySelector('.username').textContent = reel.username;
+      
+      // Show verified badge if applicable
+      if (reel.verified) {
+        reelElement.querySelector('.verified-badge').style.display = 'inline';
+      }
+      
+      // Set caption
+      reelElement.querySelector('.caption').textContent = reel.caption;
+      
+      // Set like and comment counts
+      reelElement.querySelector('.likes-count').textContent = reel.likes;
+      reelElement.querySelector('.comments-count').textContent = reel.comments;
+      
+      // Setup like and save buttons
+      const likeButton = reelElement.querySelector('.like-button');
+      const likeIcon = likeButton.querySelector('svg');
+      const saveButton = reelElement.querySelector('.save-button');
+      const saveIcon = saveButton.querySelector('svg');
+      
+      likeButton.addEventListener('click', () => {
+        if (likeIcon.classList.contains('liked')) {
+          likeIcon.classList.remove('liked');
+          const newCount = parseInt(reelElement.querySelector('.likes-count').textContent) - 1;
+          reelElement.querySelector('.likes-count').textContent = newCount;
+        } else {
+          likeIcon.classList.add('liked');
+          const newCount = parseInt(reelElement.querySelector('.likes-count').textContent) + 1;
+          reelElement.querySelector('.likes-count').textContent = newCount;
+        }
+      });
+      
+      saveButton.addEventListener('click', () => {
+        saveIcon.classList.toggle('saved');
+      });
+      
+      // Setup context button for all reels
+      const contextButton = reelElement.querySelector('.context-button');
+      contextButton.style.display = 'flex';
+      contextButton.addEventListener('click', () => openContextModal(reel.id));
+      
+      return reelElement;
+    }
+    
+    // Setup intersection observer for video play/pause
+    function setupVideoObserver() {
+      const reelItems = document.querySelectorAll('.reel-item');
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach(entry => {
+            const video = entry.target.querySelector('.reel-video');
+            const playIcon = entry.target.querySelector('.play-icon');
+            
+            if (entry.isIntersecting) {
+              video.play();
+              playIcon.style.display = 'none';
+              currentReelId = entry.target.dataset.reelId;
+            } else {
+              video.pause();
+              playIcon.style.display = 'flex';
+            }
+          });
+        },
+        { threshold: 0.7 }
+      );
+      
+      reelItems.forEach(item => observer.observe(item));
+    }
+    
+    // Open context modal with the predefined content
+    function openContextModal(reelId) {
+      // Show modal
+      contextModal.classList.add('show');
+      
+      // Display the custom misinformation analysis content
+      modalContent.innerHTML = `
+        <div class="analysis-box misinformation">
+          <div class="analysis-header">
+            <div class="analysis-title misinformation">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M12 9v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                <path d="M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+              </svg>
+              Misinformation Analysis
+            </div>
+          </div>
+          
+          <div class="analysis-explanation">
+            <p><strong>Misinformation Detected:</strong> ✅ Yes</p>
+            <p><strong>Confidence Score:</strong> 95.0%</p>
+            <p><strong>Explanation:</strong> The text appears to be a fabrication with multiple red flags. The claim that Donald Trump and Vladimir Putin are set to marry someone is demonstrably false (Factual Accuracy). There is no credible source to support this claim, and the text lacks any reliable attribution (Source Credibility). The narrative is logically inconsistent and contradictory, with phrases like 'grand farewell to Christians' and 'following the teachings of integrity in love' that don't make sense in this context (Logical Consistency). The text presents information out of context and in a misleading way, using sensational language to grab attention (Context Manipulation). The tone is emotional and attention-grabbing, rather than factual and evidence-based (Emotional Manipulation). The claim is also an unfounded conspiracy theory with no basis in reality (Conspiracy Narratives).</p>
+          </div>
+        </div>
+
+        <div class="context-section">
+          <div class="context-summary">
+            <h3>🌍 Web Context Analysis</h3>
+            <p><strong>Claim Analyzed:</strong> Donald Trump and Vladimir Putin are set to marry Hong Arling Ergunian in Paris.</p>
+          </div>
+
+          <div class="perspective-section">
+            <h4>📌 Summary</h4>
+            <p>There is no credible evidence to support the claim that Donald Trump and Vladimir Putin are set to marry Hong Arling Ergunian in Paris. The provided sources do not mention any such arrangement or event.</p>
+          </div>
+
+          <div class="perspective-section">
+            <h4>📜 Different Perspectives</h4>
+            <div class="perspective">
+              <h5>Perspective 1: No credible sources support the claim</h5>
+              <p><strong>Supporting Evidence:</strong> None of the provided sources mention a marriage between Trump, Putin, and Hong Arling Ergunian in Paris.</p>
+              <p><strong>Limitations:</strong> The sources only discuss political meetings and interactions between Trump and Putin, with no mention of a personal relationship or marriage.</p>
+            </div>
+          </div>
+
+          <div class="consensus-section">
+            <h4>🔬 Scientific Consensus</h4>
+            <p>Not applicable</p>
+          </div>
+
+          <div class="conclusion-section">
+            <h4>📖 Conclusion</h4>
+            <p>The claim appears to be entirely fabricated, with no credible sources supporting it. The provided sources only discuss political interactions between Trump and Putin, with no mention of a personal relationship or marriage.</p>
+          </div>
+
+          <div class="conclusion-section">
+            <h4>🔍 Information Gaps</h4>
+            <p>There is no information available on Hong Arling Ergunian, and it is unclear who this person is or how they are related to the claim.</p>
+          </div>
+
+          <div class="sources-section">
+            <h4>🔗 Sources</h4>
+            
+            <div class="source-item">
+              <div class="source-number high">1</div>
+              <div class="source-details">
+                <div class="source-title">
+                  How Putin and Trump shook up the world in a week
+                  <span class="reliability-badge high">9/10</span>
+                </div>
+                <a href="https://www.bbc.com/news/articles/c3w16z7dvz7o" target="_blank" rel="noopener noreferrer" class="source-link">
+                  https://www.bbc.com/news/articles/c3w16z7dvz7o
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M15 3h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 14L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </a>
+              </div>
+            </div>
+            
+            <div class="source-item">
+              <div class="source-number high">2</div>
+              <div class="source-details">
+                <div class="source-title">
+                  Trump says he could meet Putin 'soon' as Ukraine, Europe ...
+                  <span class="reliability-badge high">8/10</span>
+                </div>
+                <a href="https://www.aljazeera.com/news/2025/2/17/trump-says-he-could-meet-putin-soon-as-ukraine-europe-reel-from-outreach" target="_blank" rel="noopener noreferrer" class="source-link">
+                  https://www.aljazeera.com/news/2025/2/17/trump-says...
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M15 3h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 14L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </a>
+              </div>
+            </div>
+            
+            <div class="source-item">
+              <div class="source-number high">3</div>
+              <div class="source-details">
+                <div class="source-title">
+                  Trump meets Macron, expresses hope that Ukraine war is ...
+                  <span class="reliability-badge high">9/10</span>
+                </div>
+                <a href="https://apnews.com/article/trump-macron-ukraine-russia-starmer-8869d05f2cd8db5da277dd927cf959d4" target="_blank" rel="noopener noreferrer" class="source-link">
+                  https://apnews.com/article/trump-macron-ukraine-russia...
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M15 3h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 14L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </a>
+              </div>
+            </div>
+            
+            <div class="source-item">
+              <div class="source-number medium">4</div>
+              <div class="source-details">
+                <div class="source-title">
+                  29 times Donald Trump did what Putin wanted - Politico EU
+                  <span class="reliability-badge medium">7/10</span>
+                </div>
+                <a href="https://www.politico.eu/article/donald-trump-vladimir-putin-volodymyr-zelenskyy-united-states-russia-policy/" target="_blank" rel="noopener noreferrer" class="source-link">
+                  https://www.politico.eu/article/donald-trump-vladimir...
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M15 3h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 14L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </a>
+              </div>
+            </div>
+            
+            <div class="source-item">
+              <div class="source-number low">5</div>
+              <div class="source-details">
+                <div class="source-title">
+                  Russia Ukraine War LIVE: Amid Trump-Putin Talks, European ...
+                  <span class="reliability-badge low">4/10</span>
+                </div>
+                <a href="https://www.youtube.com/watch?v=5DH9I1Pa_Ec" target="_blank" rel="noopener noreferrer" class="source-link">
+                  https://www.youtube.com/watch?v=5DH9I1Pa_Ec
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M15 3h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 14L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Handle upload form submission (client-side only)
+    function handleUpload(event) {
+      event.preventDefault();
+      
+      const usernameInput = document.getElementById('username');
+      const captionInput = document.getElementById('caption');
+      const videoFileInput = document.getElementById('videoFile');
+      const verifiedCheckbox = document.getElementById('verified');
+      
+      // Validate inputs
+      if (!usernameInput.value || !captionInput.value || !videoFileInput.files[0]) {
+        alert('Please fill out all fields and select a video file.');
+        return;
+      }
+      
+      // Create a new reel object
+      const newReel = {
+        id: reelsData.length + 1,
+        username: usernameInput.value,
+        videoUrl: URL.createObjectURL(videoFileInput.files[0]),
+        caption: captionInput.value,
+        likes: 0,
+        comments: 0,
+        verified: verifiedCheckbox.checked
+      };
+      
+      // Add new reel to data
+      reelsData.unshift(newReel);
+      
+      // Close modal and refresh reels
+      closeUploadModal();
+      loadReels();
+      
+      alert('Reel uploaded successfully!');
+    }
+    
+    // Open upload modal
+    function openUploadModal() {
+      uploadModal.classList.add('show');
+    }
+    
+    // Close upload modal
+    function closeUploadModal() {
+      uploadModal.classList.remove('show');
+      uploadForm.reset();
+    }
+    
+    // Close context modal
+    function closeContextModal() {
+      contextModal.classList.remove('show');
+    }
+    
+    // Event listeners
+    closeModalBtn.addEventListener('click', closeContextModal);
+    uploadButton.addEventListener('click', openUploadModal);
+    closeUploadModalBtn.addEventListener('click', closeUploadModal);
+    uploadForm.addEventListener('submit', handleUpload);
+    
+    // Close modal when clicking outside
+    contextModal.addEventListener('click', function(event) {
+      if (event.target === contextModal) {
+        closeContextModal();
+      }
+    });
+    
+    uploadModal.addEventListener('click', function(event) {
+      if (event.target === uploadModal) {
+        closeUploadModal();
+      }
+    });
+    
+    // Load reels on page load
+    document.addEventListener('DOMContentLoaded', loadReels);
+  </script>
+</body>
+</html>
