@@ -13,11 +13,33 @@ IMAGE_FRAMES_DIR = "image_frames"
 JSON_FILE = "data.json"
 
 
-def extract_frames_from_video(video_path, frame_skip=100):
-    """Extract frames from a video every 'frame_skip' frames and save them as images."""
+def determine_frame_skip(video_path):
+    """Determine optimal frame skipping interval based on video length."""
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        print(f"Error: Could not open {video_path}")
+        return 100  # Default
+
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    duration = int(cap.get(cv2.CAP_PROP_POS_MSEC)) / 1000  # Convert to seconds
+
+    cap.release()
+
+    if duration < 10:  # Short video (<10s) → Skip fewer frames
+        return max(1, frame_count // 10)
+    elif duration < 60:  # Medium video (<60s) → Moderate skipping
+        return max(10, frame_count // 50)
+    else:  # Long video (>60s) → Higher frame skipping
+        return max(50, frame_count // 200)
+
+
+def extract_frames_from_video(video_path):
+    """Extract frames from a video at an optimal interval."""
     if not os.path.exists(video_path):
         print(f"Error: {video_path} not found!")
         return False
+
+    frame_skip = determine_frame_skip(video_path)
 
     os.makedirs(IMAGE_FRAMES_DIR, exist_ok=True)
 
@@ -65,21 +87,30 @@ def extract_text_from_frames():
 
     print(f"Extracted text saved to {JSON_FILE}")
 
+
 def extract_audio_from_video(video_path, audio_path):
-    """Extract audio from a video and save it as an MP3 file without altering the original video."""
+    """Extract audio from a video and save it as an MP3 file."""
     if not os.path.exists(video_path):
         print(f"Error: {video_path} not found!")
         return False
 
     video_clip = VideoFileClip(video_path)
+
+    if video_clip.audio is None:
+        print("No audio detected in video.")
+        update_json_file({"transcription": ""})  # Save empty transcription
+        video_clip.close()  # Close video to avoid subprocess issues
+        return False
+
     audio_clip = video_clip.audio
     audio_clip.write_audiofile(audio_path, codec="mp3", verbose=False)
 
-    # Close resources
+    # Proper cleanup
     audio_clip.close()
     video_clip.close()
+    del video_clip  # Force cleanup
 
-    print("Audio extraction successful! Original video remains unchanged.")
+    print("Audio extraction successful!")
     return True
 
 
@@ -99,7 +130,7 @@ def transcribe_audio_with_whisper(audio_path):
 
 
 def update_json_file(new_data):
-    """Update JSON file while ensuring only 'transcription' and 'extracted_text_on_video' exist."""
+    """Update JSON file while ensuring only 'transcription' and 'extracted_text' exist."""
     allowed_keys = {"transcription", "extracted_text"}
 
     if os.path.exists(JSON_FILE):
