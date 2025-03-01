@@ -3,6 +3,10 @@ import json
 import requests
 from datetime import datetime
 from groq import Groq
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 class WebContextAgent:
     def __init__(self, api_key=None, search_api_key=None):
@@ -14,12 +18,12 @@ class WebContextAgent:
             search_api_key (str, optional): SerpAPI key for web search
         """
         # Initialize Groq API for LLM access
-        self.groq_api_key = api_key or os.environ.get("GROQ_API_KEY")
+        self.groq_api_key = os.getenv("GROQ_API_KEY")
         if not self.groq_api_key:
             raise ValueError("Groq API key not provided and not found in environment variables")
         
         # Initialize search API
-        self.search_api_key = search_api_key or os.environ.get("SERPAPI_KEY")
+        self.search_api_key = os.getenv("SERPAPI_KEY")
         if not self.search_api_key:
             raise ValueError("Search API key not provided and not found in environment variables")
         
