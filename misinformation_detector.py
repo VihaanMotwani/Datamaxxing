@@ -2,12 +2,16 @@ import os
 import json
 import re
 from groq import Groq
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 class MisinformationDetector:
     def __init__(self, api_key=None):
         """Initialize the misinformation detector with Groq API key."""
 
-        self.api_key = api_key or os.environ.get("GROQ_API_KEY")
+        self.api_key = os.getenv("GROQ_API_KEY")
         if not self.api_key:
             raise ValueError("Groq API key not provided and not found in environment variables")
         

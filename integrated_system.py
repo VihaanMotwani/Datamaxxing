@@ -3,6 +3,10 @@ import json
 from datetime import datetime
 from misinformation_detector import MisinformationDetector
 from web_context_agent import WebContextAgent
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 class IntegratedSystem:
     def __init__(self, groq_api_key=None, serpapi_key=None):
@@ -13,8 +17,8 @@ class IntegratedSystem:
             groq_api_key (str, optional): Groq API key for LLM access
             serpapi_key (str, optional): SerpAPI key for web search
         """
-        self.groq_api_key = groq_api_key or os.environ.get("GROQ_API_KEY")
-        self.serpapi_key = serpapi_key or os.environ.get("SERPAPI_KEY")
+        self.groq_api_key = os.getenv("GROQ_API_KEY")
+        self.serpapi_key = os.getenv("SERPAPI_KEY")
         
         if not self.groq_api_key:
             raise ValueError("Groq API key not provided and not found in environment variables")

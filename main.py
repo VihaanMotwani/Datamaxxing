@@ -9,6 +9,10 @@ import os
 import json
 import argparse
 from integrated_system import IntegratedSystem
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 def main():
     """Main entry point for TruthLens."""
