@@ -1,10 +1,8 @@
 import os
 import json
 import requests
-import argparse
-from groq import Groq
-from urllib.parse import quote_plus
 from datetime import datetime
+from groq import Groq
 
 class WebContextAgent:
     def __init__(self, api_key=None, search_api_key=None):
@@ -71,6 +69,7 @@ class WebContextAgent:
             list: Search results with title, snippet, source, and link
         """
         # Prepare search query
+        from urllib.parse import quote_plus
         encoded_query = quote_plus(query)
         search_url = f"https://serpapi.com/search.json?engine=google&q={encoded_query}&api_key={self.search_api_key}&num={num_results*2}"  # Request more to filter
         
@@ -472,68 +471,21 @@ class WebContextAgent:
         Returns:
             str or dict: Formatted context text or raw context data
         """
-        print(f"Analyzing claim: {claim}")
-        print("Searching for relevant information...")
-        
         # Search the web
         search_results = self.search_web(claim)
         
         if isinstance(search_results, dict) and "error" in search_results:
-            print(f"Search error: {search_results['error']}")
             if format_output:
                 return f"Error searching for context: {search_results['error']}"
             return {"error": search_results["error"]}
         
-        print(f"Found {len(search_results)} relevant sources.")
-        print("Evaluating source reliability...")
-        
         # Evaluate sources
         evaluated_results = self.evaluate_sources(search_results)
         
-        print("Synthesizing context from multiple sources...")
-        
         # Fetch context
         context_data = self.fetch_context(claim, evaluated_results)
-        
-        if "error" in context_data:
-            print(f"Context synthesis error: {context_data['error']}")
-        else:
-            print("Context analysis complete.")
         
         # Return formatted or raw data
         if format_output:
             return self.format_context_for_display(context_data)
         return context_data
-
-def main():
-    parser = argparse.ArgumentParser(description='Web Context Agent - Fetch balanced context for claims')
-    parser.add_argument('--claim', help='The claim to analyze')
-    parser.add_argument('--groq-api-key', help='Groq API key (defaults to GROQ_API_KEY env variable)')
-    parser.add_argument('--search-api-key', help='SerpAPI key (defaults to SERPAPI_KEY env variable)')
-    parser.add_argument('--raw', action='store_true', help='Output raw JSON data instead of formatted text')
-    
-    args = parser.parse_args()
-    
-    try:
-        # Initialize the agent
-        agent = WebContextAgent(api_key=args.groq_api_key, search_api_key=args.search_api_key)
-        
-        # Get claim from args or prompt
-        claim = args.claim
-        if not claim:
-            claim = input("Enter the claim to analyze: ")
-        
-        # Analyze the claim
-        result = agent.analyze_claim(claim, format_output=not args.raw)
-        
-        # Print result
-        if args.raw:
-            print(json.dumps(result, indent=2))
-        else:
-            print(result)
-            
-    except Exception as e:
-        print(f"Error: {str(e)}")
-
-if __name__ == "__main__":
-    main()
