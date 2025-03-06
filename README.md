@@ -145,7 +145,7 @@ The system analyzes content based on these criteria:
 
 ## License
 
-
+MIT License
 
 ## Acknowledgments
 
