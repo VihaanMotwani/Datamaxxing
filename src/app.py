@@ -14,7 +14,7 @@ VIDEO_FILE = "video.mp4"
 AUDIO_FILE = "audio.mp3"
 JSON_FILE = "data.json"
 
-st.title("Truth Lens")
+st.title("DeepContext")
 
 # Input field for video URL
 video_url = st.text_input("Enter Instagram Reel URL")

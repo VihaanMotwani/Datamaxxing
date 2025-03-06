@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-TruthLens: A system for detecting misinformation in video content and providing web context.
+DeepContext: A system for detecting misinformation in video content and providing web context.
 
-This script serves as the main entry point for the TruthLens system.
+This script serves as the main entry point for the DeepContext system.
 """
 
 import os
@@ -15,11 +15,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def main():
-    """Main entry point for TruthLens."""
+    """Main entry point for DeepContext."""
     
     # Parse command line arguments
     parser = argparse.ArgumentParser(
-        description='TruthLens: Detect misinformation in video text and provide context',
+        description='DeepContext: Detect misinformation in video text and provide context',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
